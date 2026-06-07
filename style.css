@@ -375,6 +375,25 @@ button {
   box-shadow: 0 30px 80px rgba(58, 56, 80, 0.22);
 }
 
+.hero-offer-alert {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.hero-offer-alert .alert-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
 .hero-offer-title {
   font-family: var(--title-font);
   font-size: clamp(1.35rem, 3vw, 1.75rem);
