@@ -12,7 +12,7 @@
   <style>
     :root {
       --purple: #7800FF;
-      --bg: #0A0A0A;
+      --bg: #0F0D1E;
       --card: #141414;
       --green: #25d366;
       --title-font: "Plus Jakarta Sans", system-ui, sans-serif;
@@ -24,6 +24,9 @@
     body {
       font-family: var(--text-font);
       background: var(--bg);
+      background-image:
+        radial-gradient(ellipse at 50% 30%, rgba(120, 0, 255, 0.15) 0%, transparent 60%),
+        radial-gradient(ellipse at 85% 85%, rgba(90, 0, 200, 0.08) 0%, transparent 45%);
       color: #ffffff;
       min-height: 100vh;
       display: flex;
