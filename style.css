@@ -1238,6 +1238,70 @@ details p {
   display: flex;
 }
 
+/* Validação por IA na etapa do tipo de negócio */
+.lead-ai-feedback {
+  display: none;
+  margin-top: 14px;
+  padding: 13px 15px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.lead-ai-feedback.is-visible {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+}
+
+.lead-ai-feedback.loading {
+  background: rgba(255, 255, 255, 0.06);
+  color: #d7d7e0;
+}
+
+.lead-ai-feedback.success {
+  background: rgba(37, 211, 102, 0.12);
+  color: #5ff0a0;
+}
+
+.lead-ai-feedback.error {
+  background: rgba(255, 91, 91, 0.12);
+  color: #ff8b8b;
+}
+
+.lead-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.25);
+  border-top-color: #ffffff;
+  animation: lead-spin 0.7s linear infinite;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+@keyframes lead-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Confete na aprovação */
+.confetti-piece {
+  position: fixed;
+  top: -12px;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 9999;
+  animation: confetti-fall linear forwards;
+}
+
+@keyframes confetti-fall {
+  to { transform: translateY(105vh) rotate(720deg); opacity: 0; }
+}
+
 .lead-box {
   position: relative;
   width: 100%;

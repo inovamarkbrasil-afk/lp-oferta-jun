@@ -23,8 +23,25 @@ function markContactEventAsFired() {
   sessionStorage.setItem("meta_contact_fired", "true");
 }
 
+const VALIDATE_ENDPOINT =
+  "https://lading-pages-backend-lp-oferta-junho.yhtsge.easypanel.host/api/validate-lead";
+
 const N8N_WEBHOOK_URL =
   "https://n8n-n8n.yhtsge.easypanel.host/webhook-test/captura-lead";
+
+function launchConfetti() {
+  const colors = ["#7800FF", "#25d366", "#ffd23f", "#ff5b8a", "#00c2ff"];
+  for (let i = 0; i < 70; i++) {
+    const piece = document.createElement("span");
+    piece.className = "confetti-piece";
+    piece.style.left = Math.random() * 100 + "vw";
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDuration = 1.6 + Math.random() * 1.4 + "s";
+    piece.style.animationDelay = Math.random() * 0.25 + "s";
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 3200);
+  }
+}
 
 function sendLeadToWebhook(lead) {
   const utms = getUTMParams();
@@ -179,10 +196,78 @@ function initLeadForm() {
   const openButtons = document.querySelectorAll(".js-open-form");
   const closeButton = document.getElementById("leadClose");
   const progressBar = document.getElementById("leadProgressBar");
+  const aiFeedback = document.getElementById("leadAiFeedback");
   const steps = Array.from(form.querySelectorAll(".lead-step"));
 
   let current = 0;
   let lastFocused = null;
+
+  function setAiFeedback(type, html) {
+    if (!aiFeedback) return;
+    aiFeedback.className = `lead-ai-feedback is-visible ${type}`;
+    aiFeedback.innerHTML = html;
+  }
+
+  function clearAiFeedback() {
+    if (!aiFeedback) return;
+    aiFeedback.className = "lead-ai-feedback";
+    aiFeedback.innerHTML = "";
+  }
+
+  // Valida o tipo de negócio com a IA antes de avançar da etapa 1
+  async function validateBusinessWithAI(button) {
+    const input = steps[0].querySelector(".lead-input");
+    const tipo = input.value.trim();
+
+    if (tipo.length < 2) {
+      steps[0].classList.add("has-error");
+      return;
+    }
+    steps[0].classList.remove("has-error");
+
+    button.disabled = true;
+    input.disabled = true;
+    setAiFeedback(
+      "loading",
+      `<span class="lead-spinner" aria-hidden="true"></span><span>Verificando se atendemos esse tipo de negócio, um segundo...</span>`
+    );
+
+    try {
+      const res = await fetch(VALIDATE_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tipo }),
+      });
+
+      if (res.status === 429) {
+        setAiFeedback("error", "Muitas tentativas seguidas. Aguarde alguns segundos e tente de novo.");
+        button.disabled = false;
+        input.disabled = false;
+        return;
+      }
+
+      const data = await res.json();
+
+      if (data.aprovado) {
+        launchConfetti();
+        setAiFeedback("success", `<span>🎉</span><span>${data.mensagem || "Eu atendo seu negócio! Vamos pra cima! 🎉"}</span>`);
+        setTimeout(() => {
+          clearAiFeedback();
+          button.disabled = false;
+          input.disabled = false;
+          showStep(1);
+        }, 1400);
+      } else {
+        setAiFeedback("error", `<span>⚠️</span><span>${data.mensagem || "Esse setor não é a nossa especialidade no momento."}</span>`);
+        button.disabled = false;
+        input.disabled = false;
+      }
+    } catch (err) {
+      setAiFeedback("error", "Não conseguimos verificar agora. Tente novamente em instantes.");
+      button.disabled = false;
+      input.disabled = false;
+    }
+  }
 
   function showStep(index) {
     current = index;
@@ -204,6 +289,7 @@ function initLeadForm() {
     if (event) event.preventDefault();
     lastFocused = document.activeElement;
     form.reset();
+    clearAiFeedback();
     showStep(0);
     modal.classList.add("active");
     modal.setAttribute("aria-hidden", "false");
@@ -266,6 +352,11 @@ function initLeadForm() {
 
   form.querySelectorAll("[data-next]").forEach((button) => {
     button.addEventListener("click", () => {
+      // Etapa do tipo de negócio: valida com a IA antes de avançar
+      if (current === 0) {
+        validateBusinessWithAI(button);
+        return;
+      }
       if (validateStep(current)) showStep(current + 1);
     });
   });
@@ -281,6 +372,9 @@ function initLeadForm() {
       if (input.name === "phone") {
         input.value = formatPhone(input.value);
       }
+      if (input.name === "business") {
+        clearAiFeedback();
+      }
       step.classList.remove("has-error");
     });
 
@@ -289,6 +383,8 @@ function initLeadForm() {
       event.preventDefault();
       if (input.name === "phone") {
         form.requestSubmit();
+      } else if (input.name === "business") {
+        validateBusinessWithAI(steps[0].querySelector("[data-next]"));
       } else if (validateStep(current)) {
         showStep(current + 1);
       }
