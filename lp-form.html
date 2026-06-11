@@ -483,6 +483,27 @@
       if (history.length > 1) history.back();
     });
 
+    // ===== iOS/mobile: manter o campo focado acima do teclado =====
+    // No iOS o teclado não redimensiona o viewport. Então:
+    // 1) quando o teclado abre (visualViewport encolhe), damos espaço extra
+    //    embaixo (= altura do teclado) para o documento PODER rolar;
+    // 2) ao focar um campo, rolamos ele para a área visível acima do teclado.
+    const vv = window.visualViewport;
+    if (vv) {
+      vv.addEventListener("resize", () => {
+        const keyboard = Math.max(0, window.innerHeight - vv.height);
+        document.body.style.paddingBottom = keyboard > 80 ? keyboard + 40 + "px" : "";
+      });
+    }
+
+    document.querySelectorAll(".input").forEach((input) => {
+      input.addEventListener("focus", () => {
+        setTimeout(() => {
+          input.scrollIntoView({ block: "center", behavior: "smooth" });
+        }, 250);
+      });
+    });
+
     showStep(0);
   </script>
 </body>
