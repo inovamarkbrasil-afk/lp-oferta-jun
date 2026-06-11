@@ -302,13 +302,38 @@ function initLeadForm() {
     modal.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
     showStep(0);
+    syncViewport();
   }
 
   function closeModal() {
     modal.classList.remove("active");
     modal.setAttribute("aria-hidden", "true");
     document.body.style.overflow = "";
+    clearViewportSync();
     if (lastFocused) lastFocused.focus();
+  }
+
+  // Mantém o modal encaixado exatamente na área visível acima do teclado (mobile).
+  // Quando o teclado abre, a visualViewport encolhe; ajustamos topo/altura do
+  // overlay para essa área, e ele rola internamente caso o conteúdo não caiba.
+  const viewport = window.visualViewport;
+
+  function syncViewport() {
+    if (!viewport || !modal.classList.contains("active")) return;
+    modal.style.top = viewport.offsetTop + "px";
+    modal.style.bottom = "auto";
+    modal.style.height = viewport.height + "px";
+  }
+
+  function clearViewportSync() {
+    modal.style.top = "";
+    modal.style.bottom = "";
+    modal.style.height = "";
+  }
+
+  if (viewport) {
+    viewport.addEventListener("resize", syncViewport);
+    viewport.addEventListener("scroll", syncViewport);
   }
 
   function validateStep(index) {
@@ -385,6 +410,14 @@ function initLeadForm() {
 
   steps.forEach((step) => {
     const input = step.querySelector(".lead-input");
+
+    // Ao focar, garante o campo visível acima do teclado.
+    input.addEventListener("focus", () => {
+      setTimeout(() => {
+        syncViewport();
+        input.scrollIntoView({ block: "center", behavior: "smooth" });
+      }, 150);
+    });
 
     input.addEventListener("input", () => {
       if (input.name === "phone") {

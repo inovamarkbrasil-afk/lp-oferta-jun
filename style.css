@@ -1463,3 +1463,20 @@ details p {
   color: #c9c6d3;
 }
 
+/* Mobile: formulário ancorado no topo e rolável, para nunca ficar atrás do teclado.
+   O JS (visualViewport) ajusta a altura do overlay para a área visível acima do
+   teclado; aqui garantimos alinhamento no topo e o scroll interno. */
+@media (max-width: 640px) {
+  .lead-modal {
+    align-items: flex-start;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px;
+  }
+
+  .lead-box {
+    max-height: none;
+    margin: 0 auto;
+  }
+}
+
