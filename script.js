@@ -344,6 +344,16 @@ function initLeadForm() {
     if (event.target === modal) closeModal();
   });
 
+  // Mobile: tocar num botão com o teclado aberto não deve roubar o foco do input.
+  // Sem isso, o input perde o foco no 1º toque, o teclado fecha, a página se
+  // reposiciona e o clique "erra" o botão (exige tocar 2x). O preventDefault no
+  // mousedown mantém o foco/teclado estáveis; o clique continua disparando normal.
+  [...form.querySelectorAll("button"), closeButton].forEach((button) => {
+    if (button) {
+      button.addEventListener("mousedown", (event) => event.preventDefault());
+    }
+  });
+
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && modal.classList.contains("active")) {
       closeModal();
