@@ -320,9 +320,16 @@ function initLeadForm() {
 
   function syncViewport() {
     if (!viewport || !modal.classList.contains("active")) return;
-    modal.style.top = viewport.offsetTop + "px";
-    modal.style.bottom = "auto";
-    modal.style.height = viewport.height + "px";
+    // Só encaixa na área visível quando o teclado está ABERTO. Com ele fechado,
+    // mantém o overlay cobrindo a tela inteira (senão sobra faixa mostrando a LP).
+    const keyboardOpen = window.innerHeight - viewport.height > 120;
+    if (keyboardOpen) {
+      modal.style.top = viewport.offsetTop + "px";
+      modal.style.bottom = "auto";
+      modal.style.height = viewport.height + "px";
+    } else {
+      clearViewportSync();
+    }
   }
 
   function clearViewportSync() {
