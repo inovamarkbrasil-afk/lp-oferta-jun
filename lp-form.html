@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
   <title>Vamos começar | Rafael Dickel</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,10 +29,13 @@
         radial-gradient(ellipse at 85% 85%, rgba(90, 0, 200, 0.08) 0%, transparent 45%);
       color: #ffffff;
       min-height: 100vh;
+      min-height: -webkit-fill-available;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
       padding: 20px;
+      padding-top: max(40px, env(safe-area-inset-top));
+      padding-bottom: max(40px, env(safe-area-inset-bottom));
     }
 
     .card {
