@@ -23,7 +23,27 @@ function markContactEventAsFired() {
   sessionStorage.setItem("meta_contact_fired", "true");
 }
 
-function registerClick() {
+const N8N_WEBHOOK_URL =
+  "https://n8n-n8n.yhtsge.easypanel.host/webhook-test/captura-lead";
+
+function sendLeadToWebhook(lead) {
+  const utms = getUTMParams();
+
+  return fetch(N8N_WEBHOOK_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      ...lead,
+      origem: "lp-oferta-junho",
+      utm_source: utms.utm_source,
+      utm_medium: utms.utm_medium,
+      utm_campaign: utms.utm_campaign,
+      enviado_em: new Date().toISOString(),
+    }),
+  }).catch(() => {});
+}
+
+function registerClick(lead = {}) {
   const utms = getUTMParams();
 
   fetch("https://api.inovamarkbrasil.com/api/leads/click", {
@@ -37,6 +57,7 @@ function registerClick() {
       utm_medium: utms.utm_medium,
       utm_campaign: utms.utm_campaign,
       origem: "lp-oferta-junho",
+      ...lead,
     }),
   }).catch(() => {});
 }
@@ -108,6 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   initCountdown();
+  initLeadForm();
 });
 
 function initCountdown() {
@@ -147,4 +169,165 @@ function initCountdown() {
 
   render();
   setInterval(render, 1000);
+}
+
+function initLeadForm() {
+  const modal = document.getElementById("leadModal");
+  const form = document.getElementById("leadForm");
+  if (!modal || !form) return;
+
+  const openButtons = document.querySelectorAll(".js-open-form");
+  const closeButton = document.getElementById("leadClose");
+  const progressBar = document.getElementById("leadProgressBar");
+  const steps = Array.from(form.querySelectorAll(".lead-step"));
+
+  let current = 0;
+  let lastFocused = null;
+
+  function showStep(index) {
+    current = index;
+
+    steps.forEach((step, i) => {
+      step.classList.toggle("is-active", i === index);
+      step.classList.remove("has-error");
+    });
+
+    progressBar.style.width = `${((index + 1) / steps.length) * 100}%`;
+
+    const input = steps[index].querySelector(".lead-input");
+    if (input) {
+      setTimeout(() => input.focus(), 60);
+    }
+  }
+
+  function openModal(event) {
+    if (event) event.preventDefault();
+    lastFocused = document.activeElement;
+    form.reset();
+    showStep(0);
+    modal.classList.add("active");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeModal() {
+    modal.classList.remove("active");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+    if (lastFocused) lastFocused.focus();
+  }
+
+  function validateStep(index) {
+    const step = steps[index];
+    const input = step.querySelector(".lead-input");
+    const value = input.value.trim();
+    let valid = value.length >= 2;
+
+    if (input.name === "phone") {
+      valid = value.replace(/\D/g, "").length >= 10;
+    }
+
+    step.classList.toggle("has-error", !valid);
+    return valid;
+  }
+
+  function formatPhone(value) {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+    if (digits.length <= 2) return digits.length ? `(${digits}` : "";
+    if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    if (digits.length <= 10) {
+      return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+    }
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  }
+
+  function buildWhatsappUrl(data) {
+    const message = encodeURIComponent(
+      `Olá, Rafael! Quero uma estrutura completa para o meu negócio\n\n` +
+        `• Negócio: ${data.business}\n` +
+        `• Nome: ${data.name}\n` +
+        `• WhatsApp: ${data.phone}`
+    );
+    return `https://wa.me/${whatsappNumber}?text=${message}`;
+  }
+
+  openButtons.forEach((button) => button.addEventListener("click", openModal));
+  closeButton.addEventListener("click", closeModal);
+
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) closeModal();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && modal.classList.contains("active")) {
+      closeModal();
+    }
+  });
+
+  form.querySelectorAll("[data-next]").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (validateStep(current)) showStep(current + 1);
+    });
+  });
+
+  form.querySelectorAll("[data-back]").forEach((button) => {
+    button.addEventListener("click", () => showStep(current - 1));
+  });
+
+  steps.forEach((step) => {
+    const input = step.querySelector(".lead-input");
+
+    input.addEventListener("input", () => {
+      if (input.name === "phone") {
+        input.value = formatPhone(input.value);
+      }
+      step.classList.remove("has-error");
+    });
+
+    input.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      if (input.name === "phone") {
+        form.requestSubmit();
+      } else if (validateStep(current)) {
+        showStep(current + 1);
+      }
+    });
+  });
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!validateStep(current)) return;
+
+    const data = {
+      business: form.elements["business"].value.trim(),
+      name: form.elements["name"].value.trim(),
+      phone: form.elements["phone"].value.trim(),
+    };
+
+    if (typeof fbq === "function") {
+      fbq("track", "Lead");
+    }
+
+    registerClick({
+      tipo_negocio: data.business,
+      nome: data.name,
+      telefone: data.phone,
+    });
+
+    sendLeadToWebhook({
+      tipo_negocio: data.business,
+      nome: data.name,
+      telefone: data.phone,
+    });
+
+    const submitButton = form.querySelector(".lead-submit");
+    if (submitButton) submitButton.disabled = true;
+
+    setTimeout(() => {
+      window.open(buildWhatsappUrl(data), "_blank", "noopener,noreferrer");
+      closeModal();
+      if (submitButton) submitButton.disabled = false;
+    }, 200);
+  });
 }

@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vamos começar | Rafael Dickel</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --purple: #7800FF;
+      --bg: #0A0A0A;
+      --card: #141414;
+      --green: #25d366;
+      --title-font: "Plus Jakarta Sans", system-ui, sans-serif;
+      --text-font: "Quicksand", system-ui, sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--text-font);
+      background: var(--bg);
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .card {
+      position: relative;
+      width: 100%;
+      max-width: 460px;
+      background: var(--card);
+      border-radius: 28px;
+      padding: 34px 28px 30px;
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
+      max-height: 94vh;
+      overflow-y: auto;
+    }
+
+    .close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 38px;
+      height: 38px;
+      border: none;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #ffffff;
+      font-size: 1.6rem;
+      line-height: 1;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .close:hover { background: rgba(255, 255, 255, 0.16); }
+
+    .progress {
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      overflow: hidden;
+      margin: 8px 0 26px;
+    }
+    .progress-bar {
+      display: block;
+      height: 100%;
+      width: 33.33%;
+      border-radius: 999px;
+      background: var(--purple);
+      transition: width 0.35s ease;
+    }
+
+    .step { display: none; animation: fade 0.25s ease; }
+    .step.is-active { display: block; }
+    @keyframes fade {
+      from { opacity: 0; transform: translateX(12px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .back {
+      background: none;
+      border: none;
+      color: #b9b9c4;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
+
+    .eyebrow {
+      color: var(--purple);
+      font-weight: 700;
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .title {
+      font-family: var(--title-font);
+      font-size: clamp(1.5rem, 5vw, 1.9rem);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      font-weight: 800;
+    }
+
+    .subtitle {
+      color: #b9b9c4;
+      font-size: 0.98rem;
+      margin-top: 10px;
+    }
+
+    .field { margin-top: 20px; }
+
+    .input {
+      width: 100%;
+      padding: 16px 18px;
+      border-radius: 14px;
+      border: 1.5px solid rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.05);
+      color: #ffffff;
+      font-size: 1.05rem;
+      font-family: var(--text-font);
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+    .input::placeholder { color: rgba(255, 255, 255, 0.4); }
+    .input:focus {
+      outline: none;
+      border-color: var(--purple);
+      background: rgba(120, 0, 255, 0.1);
+    }
+    .field.has-error .input { border-color: #ff5b5b; }
+
+    .field-error {
+      display: none;
+      color: #ff7b7b;
+      font-size: 0.86rem;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+    .field.has-error .field-error { display: block; }
+
+    .btn {
+      width: 100%;
+      margin-top: 24px;
+      padding: 16px 24px;
+      border: none;
+      border-radius: 14px;
+      background: var(--purple);
+      color: #ffffff;
+      font-family: var(--text-font);
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: filter 0.2s ease, opacity 0.2s ease;
+    }
+    .btn:hover { filter: brightness(1.08); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .btn-whatsapp { background: var(--green); }
+
+    /* Feedback da validação por IA */
+    .feedback {
+      display: none;
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      font-weight: 600;
+      font-size: 0.96rem;
+      line-height: 1.4;
+    }
+    .feedback.is-visible { display: flex; gap: 10px; align-items: flex-start; }
+    .feedback.loading {
+      background: rgba(255, 255, 255, 0.06);
+      color: #d7d7e0;
+    }
+    .feedback.success {
+      background: rgba(37, 211, 102, 0.12);
+      color: #5ff0a0;
+    }
+    .feedback.error {
+      background: rgba(255, 91, 91, 0.12);
+      color: #ff8b8b;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2.5px solid rgba(255, 255, 255, 0.25);
+      border-top-color: #ffffff;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Confete (festa na aprovação) */
+    .confetti-piece {
+      position: fixed;
+      top: -12px;
+      width: 9px;
+      height: 9px;
+      border-radius: 2px;
+      pointer-events: none;
+      z-index: 9999;
+      animation: confetti-fall linear forwards;
+    }
+    @keyframes confetti-fall {
+      to { transform: translateY(105vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* Etapa de confirmação */
+    .confirm { text-align: center; padding: 10px 0; }
+    .confirm-icon {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 18px;
+      border-radius: 999px;
+      background: rgba(37, 211, 102, 0.14);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      color: var(--green);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="formHeading">
+    <button class="close" id="closeBtn" aria-label="Fechar">&times;</button>
+
+    <div class="progress">
+      <span class="progress-bar" id="progressBar"></span>
+    </div>
+
+    <form id="leadForm" novalidate>
+      <!-- ETAPA 1 — Tipo de negócio (validação por IA) -->
+      <div class="step is-active" data-step="1">
+        <p class="eyebrow">Etapa 1 de 3</p>
+        <h2 class="title" id="formHeading">Qual é o tipo do seu negócio?</h2>
+        <p class="subtitle">Pode ser do seu jeito, sem complicar.</p>
+
+        <div class="field" data-field="business">
+          <input type="text" class="input" name="business"
+                 placeholder="Ex: Integrador solar, instalador fotovoltaico..."
+                 autocomplete="organization" />
+          <p class="field-error">Conta pra gente o tipo do seu negócio.</p>
+        </div>
+
+        <div class="feedback" id="aiFeedback" role="status" aria-live="polite"></div>
+
+        <button type="button" class="btn" id="validateBtn">Continuar</button>
+      </div>
+
+      <!-- ETAPA 2 — Nome + Telefone -->
+      <div class="step" data-step="2">
+        <button type="button" class="back" data-back>← Voltar</button>
+        <p class="eyebrow">Etapa 2 de 3</p>
+        <h2 class="title">Como podemos falar com você?</h2>
+        <p class="subtitle">Seu nome e o melhor WhatsApp para contato.</p>
+
+        <div class="field" data-field="name">
+          <input type="text" class="input" name="name" placeholder="Seu nome" autocomplete="name" />
+          <p class="field-error">Digite seu nome para continuar.</p>
+        </div>
+
+        <div class="field" data-field="phone">
+          <input type="tel" class="input" name="phone" placeholder="(00) 00000-0000"
+                 inputmode="numeric" autocomplete="tel" maxlength="16" />
+          <p class="field-error">Digite um WhatsApp válido com DDD.</p>
+        </div>
+
+        <button type="submit" class="btn">Enviar meus dados</button>
+      </div>
+
+      <!-- ETAPA 3 — Confirmação -->
+      <div class="step" data-step="3">
+        <div class="confirm">
+          <div class="confirm-icon" aria-hidden="true">✓</div>
+          <p class="eyebrow" style="text-align:center;">Etapa 3 de 3</p>
+          <h2 class="title">Recebemos seus dados!</h2>
+          <p class="subtitle">O Rafael vai falar com você no WhatsApp em instantes. Se preferir, já pode iniciar a conversa agora.</p>
+          <a href="#" class="btn btn-whatsapp" id="whatsappBtn" target="_blank" rel="noopener">
+            Falar com o Rafael agora
+          </a>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // ===== Configuração =====
+    // Base do seu backend (mesma API que já recebe os leads).
+    // Troque se o endpoint estiver em outro host.
+    const API_BASE = "http://localhost:3001"; // troque pela URL pública do backend em produção
+    const VALIDATE_ENDPOINT = `${API_BASE}/api/validate-lead`;
+    const WHATSAPP_NUMBER = "5547991795018";
+
+    const form = document.getElementById("leadForm");
+    const steps = Array.from(form.querySelectorAll(".step"));
+    const progressBar = document.getElementById("progressBar");
+    const validateBtn = document.getElementById("validateBtn");
+    const aiFeedback = document.getElementById("aiFeedback");
+    const whatsappBtn = document.getElementById("whatsappBtn");
+
+    let current = 0;
+    const lead = { business: "", name: "", phone: "" };
+
+    function showStep(index) {
+      current = index;
+      steps.forEach((step, i) => step.classList.toggle("is-active", i === index));
+      progressBar.style.width = `${((index + 1) / steps.length) * 100}%`;
+      const input = steps[index].querySelector(".input");
+      if (input) setTimeout(() => input.focus(), 60);
+    }
+
+    function setFieldError(name, hasError) {
+      const field = form.querySelector(`[data-field="${name}"]`);
+      if (field) field.classList.toggle("has-error", hasError);
+    }
+
+    function setFeedback(type, html) {
+      aiFeedback.className = `feedback is-visible ${type}`;
+      aiFeedback.innerHTML = html;
+    }
+    function clearFeedback() {
+      aiFeedback.className = "feedback";
+      aiFeedback.innerHTML = "";
+    }
+
+    function formatPhone(value) {
+      const d = value.replace(/\D/g, "").slice(0, 11);
+      if (d.length <= 2) return d.length ? `(${d}` : "";
+      if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+      if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+      return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+    }
+
+    function launchConfetti() {
+      const colors = ["#7800FF", "#25d366", "#ffd23f", "#ff5b8a", "#00c2ff"];
+      for (let i = 0; i < 70; i++) {
+        const piece = document.createElement("span");
+        piece.className = "confetti-piece";
+        piece.style.left = Math.random() * 100 + "vw";
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDuration = 1.6 + Math.random() * 1.4 + "s";
+        piece.style.animationDelay = Math.random() * 0.25 + "s";
+        document.body.appendChild(piece);
+        setTimeout(() => piece.remove(), 3200);
+      }
+    }
+
+    function buildWhatsappUrl() {
+      const msg = encodeURIComponent(
+        `Olá, Rafael! Quero uma estrutura completa para o meu negócio\n\n` +
+          `• Negócio: ${lead.business}\n` +
+          `• Nome: ${lead.name}\n` +
+          `• WhatsApp: ${lead.phone}`
+      );
+      return `https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`;
+    }
+
+    // ===== ETAPA 1: validação por IA =====
+    validateBtn.addEventListener("click", async () => {
+      const input = form.elements["business"];
+      const tipo = input.value.trim();
+
+      if (tipo.length < 2) {
+        setFieldError("business", true);
+        return;
+      }
+      setFieldError("business", false);
+
+      // Loading
+      validateBtn.disabled = true;
+      input.disabled = true;
+      setFeedback(
+        "loading",
+        `<span class="spinner" aria-hidden="true"></span>
+         <span>Verificando se atendemos esse tipo de negócio, um segundo...</span>`
+      );
+
+      try {
+        const res = await fetch(VALIDATE_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tipo }),
+        });
+
+        if (res.status === 429) {
+          setFeedback("error", "Muitas tentativas seguidas. Aguarde alguns segundos e tente de novo.");
+          validateBtn.disabled = false;
+          input.disabled = false;
+          return;
+        }
+
+        const data = await res.json();
+
+        if (data.aprovado) {
+          lead.business = tipo;
+          launchConfetti();
+          setFeedback("success", `<span>🎉</span><span>${data.mensagem || "Eu atendo seu negócio! Vamos pra cima! 🎉"}</span>`);
+          setTimeout(() => {
+            clearFeedback();
+            validateBtn.disabled = false;
+            input.disabled = false;
+            showStep(1);
+          }, 1400);
+        } else {
+          setFeedback(
+            "error",
+            `<span>⚠️</span><span>${data.mensagem || "Esse setor não é a nossa especialidade no momento."}</span>`
+          );
+          validateBtn.disabled = false;
+          input.disabled = false;
+        }
+      } catch (err) {
+        setFeedback("error", "Não conseguimos verificar agora. Tente novamente em instantes.");
+        validateBtn.disabled = false;
+        input.disabled = false;
+      }
+    });
+
+    // Voltar
+    form.querySelectorAll("[data-back]").forEach((btn) => {
+      btn.addEventListener("click", () => showStep(current - 1));
+    });
+
+    // Máscara de telefone + limpar erro ao digitar
+    steps.forEach((step) => {
+      step.querySelectorAll(".input").forEach((input) => {
+        input.addEventListener("input", () => {
+          if (input.name === "phone") input.value = formatPhone(input.value);
+          setFieldError(input.name, false);
+        });
+      });
+    });
+
+    // ===== ETAPA 2 -> 3: submit =====
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const name = form.elements["name"].value.trim();
+      const phone = form.elements["phone"].value.trim();
+
+      let valid = true;
+      if (name.length < 2) { setFieldError("name", true); valid = false; }
+      if (phone.replace(/\D/g, "").length < 10) { setFieldError("phone", true); valid = false; }
+      if (!valid) return;
+
+      lead.name = name;
+      lead.phone = phone;
+
+      // Aqui você pode enviar o lead para sua API / webhook do n8n, se desejar.
+      // Ex.: fetch(`${API_BASE}/api/leads/click`, { ... })
+
+      whatsappBtn.href = buildWhatsappUrl();
+      showStep(2);
+    });
+
+    // Fechar
+    document.getElementById("closeBtn").addEventListener("click", () => {
+      // Standalone: volta para a página anterior (ajuste conforme seu fluxo)
+      if (history.length > 1) history.back();
+    });
+
+    showStep(0);
+  </script>
+</body>
+</html>
