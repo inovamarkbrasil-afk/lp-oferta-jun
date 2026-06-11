@@ -201,6 +201,7 @@ function initLeadForm() {
 
   let current = 0;
   let lastFocused = null;
+  let validating = false;
 
   function setAiFeedback(type, html) {
     if (!aiFeedback) return;
@@ -223,14 +224,22 @@ function initLeadForm() {
       steps[0].classList.add("has-error");
       return;
     }
+    if (validating) return;
+    validating = true;
     steps[0].classList.remove("has-error");
 
+    // Mantém o input focado (teclado aberto) durante a validação — por isso NÃO
+    // usamos input.disabled, que tiraria o foco e fecharia o teclado no mobile.
     button.disabled = true;
-    input.disabled = true;
     setAiFeedback(
       "loading",
       `<span class="lead-spinner" aria-hidden="true"></span><span>Verificando se atendemos esse tipo de negócio, um segundo...</span>`
     );
+
+    const finish = () => {
+      validating = false;
+      button.disabled = false;
+    };
 
     try {
       const res = await fetch(VALIDATE_ENDPOINT, {
@@ -241,8 +250,7 @@ function initLeadForm() {
 
       if (res.status === 429) {
         setAiFeedback("error", "Muitas tentativas seguidas. Aguarde alguns segundos e tente de novo.");
-        button.disabled = false;
-        input.disabled = false;
+        finish();
         return;
       }
 
@@ -253,19 +261,16 @@ function initLeadForm() {
         setAiFeedback("success", `<span>🎉</span><span>${data.mensagem || "Eu atendo seu negócio! Vamos pra cima! 🎉"}</span>`);
         setTimeout(() => {
           clearAiFeedback();
-          button.disabled = false;
-          input.disabled = false;
+          finish();
           showStep(1);
         }, 1400);
       } else {
         setAiFeedback("error", `<span>⚠️</span><span>${data.mensagem || "Esse setor não é a nossa especialidade no momento."}</span>`);
-        button.disabled = false;
-        input.disabled = false;
+        finish();
       }
     } catch (err) {
       setAiFeedback("error", "Não conseguimos verificar agora. Tente novamente em instantes.");
-      button.disabled = false;
-      input.disabled = false;
+      finish();
     }
   }
 
@@ -279,10 +284,11 @@ function initLeadForm() {
 
     progressBar.style.width = `${((index + 1) / steps.length) * 100}%`;
 
+    // Foco SÍNCRONO: no mobile, focar o campo enquanto o teclado já está aberto
+    // (e dentro do gesto de toque) mantém o teclado ativo — o usuário não precisa
+    // tocar no campo de novo a cada etapa.
     const input = steps[index].querySelector(".lead-input");
-    if (input) {
-      setTimeout(() => input.focus(), 60);
-    }
+    if (input) input.focus();
   }
 
   function openModal(event) {
@@ -290,10 +296,12 @@ function initLeadForm() {
     lastFocused = document.activeElement;
     form.reset();
     clearAiFeedback();
-    showStep(0);
+    // Ativa o modal ANTES de focar — o campo precisa estar visível para o foco
+    // (e o teclado) funcionar. showStep(0) por último foca já dentro do gesto do clique.
     modal.classList.add("active");
     modal.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
+    showStep(0);
   }
 
   function closeModal() {
