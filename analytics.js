@@ -49,24 +49,21 @@
     }
   }
 
+  // Mesma coisa, mas garante no máximo um disparo por sessão para cada evento —
+  // evita inflar os números se o usuário repetir uma ação dentro do mesmo fluxo.
+  function trackEventOnce(eventName, props) {
+    var key = "plausible_evt_" + eventName;
+    try {
+      if (sessionStorage.getItem(key) === "1") return;
+      sessionStorage.setItem(key, "1");
+    } catch (e) {
+      // sessionStorage indisponível (ex.: modo privado antigo) — dispara mesmo assim.
+    }
+    trackEvent(eventName, props);
+  }
+
   // Disponibiliza para os scripts das páginas.
   window.trackEvent = trackEvent;
+  window.trackEventOnce = trackEventOnce;
   window.getUTMParams = getUTMParams;
-
-  // ===== Lead: qualquer clique em botão/link de WhatsApp =====
-  // Listener delegado no document (fase de captura). Não interfere nos handlers
-  // existentes — o WhatsApp continua abrindo normalmente — e dispara exatamente
-  // uma vez por clique (um clique = uma chamada).
-  var WHATSAPP_SELECTOR =
-    'a[href*="wa.me"], a[href*="api.whatsapp"], a[href*="web.whatsapp"], .js-whatsapp';
-
-  document.addEventListener(
-    "click",
-    function (event) {
-      var trigger = event.target.closest && event.target.closest(WHATSAPP_SELECTOR);
-      if (!trigger) return;
-      trackEvent("Lead");
-    },
-    true
-  );
 })();

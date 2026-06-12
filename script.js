@@ -100,6 +100,11 @@ function openWhatsapp(event) {
 
   setTimeout(() => {
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+
+    // Plausible: WhatsApp aberto pelo botão de contato direto (topo).
+    if (typeof window.trackEventOnce === "function") {
+      window.trackEventOnce("WhatsApp", { origem: "botao_topo" });
+    }
   }, 200);
 }
 
@@ -257,6 +262,13 @@ function initLeadForm() {
       const data = await res.json();
 
       if (data.aprovado) {
+        // Plausible: IA aprovou o tipo de negócio.
+        if (typeof window.trackEventOnce === "function") {
+          window.trackEventOnce("NegocioQualificado", {
+            tipo_negocio: tipo,
+            status_ia: "qualificado",
+          });
+        }
         launchConfetti();
         setAiFeedback("success", `<span>🎉</span><span>${data.mensagem || "Eu atendo seu negócio! Vamos pra cima! 🎉"}</span>`);
         setTimeout(() => {
@@ -265,6 +277,13 @@ function initLeadForm() {
           showStep(1);
         }, 1400);
       } else {
+        // Plausible: IA reprovou o tipo de negócio.
+        if (typeof window.trackEventOnce === "function") {
+          window.trackEventOnce("NegocioDesqualificado", {
+            tipo_negocio: tipo,
+            status_ia: "desqualificado",
+          });
+        }
         setAiFeedback("error", `<span>⚠️</span><span>${data.mensagem || "Esse setor não é a nossa especialidade no momento."}</span>`);
         finish();
       }
@@ -293,6 +312,12 @@ function initLeadForm() {
 
   function openModal(event) {
     if (event) event.preventDefault();
+
+    // Plausible: usuário clicou em "Quero montar minha estrutura" e abriu o formulário.
+    if (typeof window.trackEventOnce === "function") {
+      window.trackEventOnce("FormularioIniciado");
+    }
+
     lastFocused = document.activeElement;
     form.reset();
     clearAiFeedback();
@@ -463,9 +488,9 @@ function initLeadForm() {
       fbq("track", "Lead");
     }
 
-    // Plausible: formulário enviado com dados válidos.
-    if (typeof window.trackEvent === "function") {
-      window.trackEvent("Formulario", { tipo_negocio: data.business });
+    // Plausible: etapa 3 concluída (WhatsApp informado) — lead efetivo.
+    if (typeof window.trackEventOnce === "function") {
+      window.trackEventOnce("Lead", { tipo_negocio: data.business });
     }
 
     registerClick({
@@ -485,6 +510,12 @@ function initLeadForm() {
 
     setTimeout(() => {
       window.open(buildWhatsappUrl(data), "_blank", "noopener,noreferrer");
+
+      // Plausible: WhatsApp aberto.
+      if (typeof window.trackEventOnce === "function") {
+        window.trackEventOnce("WhatsApp", { origem: "formulario" });
+      }
+
       closeModal();
       if (submitButton) submitButton.disabled = false;
     }, 200);

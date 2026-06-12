@@ -341,11 +341,6 @@
       progressBar.style.width = `${((index + 1) / steps.length) * 100}%`;
       const input = steps[index].querySelector(".input");
       if (input) setTimeout(() => input.focus(), 60);
-
-      // Plausible: tela de confirmação/sucesso (etapa 3) exibida = conversão.
-      if (index === 2 && typeof window.trackEvent === "function") {
-        window.trackEvent("Conversao", { tipo_negocio: lead.business });
-      }
     }
 
     function setFieldError(name, hasError) {
@@ -405,6 +400,11 @@
       }
       setFieldError("business", false);
 
+      // Plausible: usuário começou a preencher o formulário (1ª validação).
+      if (typeof window.trackEventOnce === "function") {
+        window.trackEventOnce("FormularioIniciado");
+      }
+
       // Loading
       validateBtn.disabled = true;
       input.disabled = true;
@@ -432,6 +432,13 @@
 
         if (data.aprovado) {
           lead.business = tipo;
+          // Plausible: IA aprovou o tipo de negócio.
+          if (typeof window.trackEventOnce === "function") {
+            window.trackEventOnce("NegocioQualificado", {
+              tipo_negocio: tipo,
+              status_ia: "qualificado",
+            });
+          }
           launchConfetti();
           setFeedback("success", `<span>🎉</span><span>${data.mensagem || "Eu atendo seu negócio! Vamos pra cima! 🎉"}</span>`);
           setTimeout(() => {
@@ -441,6 +448,13 @@
             showStep(1);
           }, 1400);
         } else {
+          // Plausible: IA reprovou o tipo de negócio.
+          if (typeof window.trackEventOnce === "function") {
+            window.trackEventOnce("NegocioDesqualificado", {
+              tipo_negocio: tipo,
+              status_ia: "desqualificado",
+            });
+          }
           setFeedback(
             "error",
             `<span>⚠️</span><span>${data.mensagem || "Esse setor não é a nossa especialidade no momento."}</span>`
@@ -484,16 +498,21 @@
       lead.name = name;
       lead.phone = phone;
 
-      // Plausible: formulário enviado com dados válidos.
-      if (typeof window.trackEvent === "function") {
-        window.trackEvent("Formulario", { tipo_negocio: lead.business });
-      }
-
       // Aqui você pode enviar o lead para sua API / webhook do n8n, se desejar.
       // Ex.: fetch(`${API_BASE}/api/leads/click`, { ... })
 
       whatsappBtn.href = buildWhatsappUrl();
       showStep(2);
+    });
+
+    // ===== ETAPA 3: clique em "Falar com o Rafael agora" =====
+    // O link abre o WhatsApp nativamente (target=_blank); aqui só registramos.
+    whatsappBtn.addEventListener("click", () => {
+      // Plausible: etapa 3 concluída (WhatsApp informado) — lead efetivo.
+      if (typeof window.trackEventOnce === "function") {
+        window.trackEventOnce("Lead", { tipo_negocio: lead.business });
+        window.trackEventOnce("WhatsApp", { origem: "formulario" });
+      }
     });
 
     // Fechar
