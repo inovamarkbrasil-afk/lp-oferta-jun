@@ -27,7 +27,7 @@ const VALIDATE_ENDPOINT =
   "https://lading-pages-backend-lp-oferta-junho.yhtsge.easypanel.host/api/validate-lead";
 
 const N8N_WEBHOOK_URL =
-  "https://n8n-n8n.yhtsge.easypanel.host/webhook-test/captura-lead";
+  "https://n8n-n8n.yhtsge.easypanel.host/webhook/captura-lead";
 
 function launchConfetti() {
   const colors = ["#7800FF", "#25d366", "#ffd23f", "#ff5b8a", "#00c2ff"];
