@@ -463,6 +463,11 @@ function initLeadForm() {
       fbq("track", "Lead");
     }
 
+    // Plausible: formulário enviado com dados válidos.
+    if (typeof window.trackEvent === "function") {
+      window.trackEvent("Formulario", { tipo_negocio: data.business });
+    }
+
     registerClick({
       tipo_negocio: data.business,
       nome: data.name,

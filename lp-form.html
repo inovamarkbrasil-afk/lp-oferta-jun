@@ -250,6 +250,7 @@
   </style>
 
   <script defer data-domain="oferta-jun.rafaeldickel.com" src="https://lading-pages-plausible.yhtsge.easypanel.host/js/script.js"></script>
+  <script src="analytics.js"></script>
 </head>
 <body>
 
@@ -340,6 +341,11 @@
       progressBar.style.width = `${((index + 1) / steps.length) * 100}%`;
       const input = steps[index].querySelector(".input");
       if (input) setTimeout(() => input.focus(), 60);
+
+      // Plausible: tela de confirmação/sucesso (etapa 3) exibida = conversão.
+      if (index === 2 && typeof window.trackEvent === "function") {
+        window.trackEvent("Conversao", { tipo_negocio: lead.business });
+      }
     }
 
     function setFieldError(name, hasError) {
@@ -477,6 +483,11 @@
 
       lead.name = name;
       lead.phone = phone;
+
+      // Plausible: formulário enviado com dados válidos.
+      if (typeof window.trackEvent === "function") {
+        window.trackEvent("Formulario", { tipo_negocio: lead.business });
+      }
 
       // Aqui você pode enviar o lead para sua API / webhook do n8n, se desejar.
       // Ex.: fetch(`${API_BASE}/api/leads/click`, { ... })
